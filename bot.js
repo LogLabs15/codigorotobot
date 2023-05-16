@@ -1,7 +1,14 @@
 const {Telegraf} = require('telegraf')
+const {Express} = require('express')
+
+const API_TELEGRAM = 'API_TELEGRAM'
+const app = express()
 
 const bot = new Telegraf("6027248029:AAHygPuGWFU7sBBzMn9ioN6o-B6hpRLqg5s")
 
+bot.telegram.setWebhook('')
+
+bot.startWebhook('',null,process.env.PORT||3000)
 bot.command("start", ctx => {
 		ctx.reply("Este es un bot creado para falicilitarles la vida a ustedes los progarmadores espero que encuentren lo que buscan.\n\n ```Un saludo de el equipo de Codigo Roto```", {
 		reply_markup: {
@@ -21,6 +28,15 @@ bot.command("start", ctx => {
 	})
 
 })
+
+const lastMessages = [
+	{role: 'system',  content: 'Soy el asistentes de pregunta de programacion'}
+]
+
+
+
+
+
 
 bot.action("credits", ctx => {
 	ctx.answerCbQuery();
@@ -123,9 +139,7 @@ bot.hears("Soporte", ctx => {
 	ctx.reply("Hola a todos esperamos que nuesto bot sea de su agrado y no cuente con ningun error en caso de esto contactar con los Administradores:\n\n CEO:@chanchitofeliz \n Admin:@carloe_20 \n Admin:@BryanIBB")
 })
 
-bot.hears("Dudas y Preguntas Frecuentes", ctx => {
-	ctx.reply("Esta seccion esta en mantenimiento.Gracias por usar nuestro bot")
-})
+
 bot.hears("Informacion sobre este bot", ctx=> {
 	ctx.reply("¡Hola! Soy un bot diseñado para ayudar a los programadores en su trabajo diario. Aquí te dejo algunas de mis funciones y características:\n\n1. Ayuda con la sintaxis: Si tienes problemas con la sintaxis de un lenguaje de programación, puedo ayudarte a encontrar la solución correcta.\n\n2. Proporciono ejemplos de código: Si necesitas un ejemplo de código para una tarea específica, puedo proporcionarte algunos ejemplos para que puedas entender mejor cómo funciona.\n\n3. Respondo preguntas frecuentes: Si tienes preguntas frecuentes sobre programación, puedo responderlas rápidamente y darte información útil.\n\n5. Soy fácil de usar: Puedes interactuar conmigo a través de comandos simples y claros, lo que hace que sea fácil obtener la información que necesitas.\n\nEspero poder ser útil en tu trabajo diario como programador. ¡No dudes en preguntarme cualquier cosa!")
 })
@@ -138,4 +152,36 @@ bot.hears("Aporte y Donaciones al proyecto", ctx=> {
 bot.hears("Servicios Pagados", ctx => {
 	ctx.reply("Hola si quieres solicitar un servicio pagado puedes escribirle a los admins y estos te diran las ofertas que tienen:\n\n CEO:@chanchitofeliz \n\n Admin:@BryanIBB \n \n Admin:@carloe_20 \n\n Sera un gusto atenderlos.Saludos")
 })
+
+bot.action("masusado", ctx => {
+	ctx.reply("El lenguaje mas usado en la programacion hasta el dia de hoy es JavaScrpit con varios usos que las personas le definen")
+})
+
+bot.on("Dudas y Preguntas Frecuentes", async (chat) => {
+	let reply = "Hola ¿Que dudas tienes?"
+
+	let message = chat.message.text
+
+	lastMessages.push( {role:'user', content: message})
+
+    const config = new Configuration({
+    	apiKey: API_OPENAI
+    })
+
+    const openai = new OpenAIApi(config)
+
+    const response = await openai.createChatCompletion({
+    	model: 'gpt-3.5-turbo',
+    	message: lastMessages
+    })
+
+    reply = response.data.choices[0].message['content']
+
+    chat.reply(reply)
+
+    if(lastMessages.length > 20){
+    	lastMessages.slice(1, 1)
+    }
+})
+
 bot.launch()
